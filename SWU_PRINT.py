@@ -46,34 +46,35 @@ def fetch_images_from_website(json_file_path, image_folder):
         with open(json_file_path, 'r') as file:
             data = json.load(file)
         
-        base_url = "https://swudb.com/cards/SOR/"
+        base_url = "https://swudb.com/cards/"
 
         # Ensure the image folder exists
         if not os.path.exists(image_folder):
             os.makedirs(image_folder)
         
+        card_decks = set()
         card_ids = set()
 
         # Collect all unique card IDs
         if data.get('leader'):
-            card_ids.add(data['leader']['id'].split('_')[1])
+            card_ids.add(data['leader']['id'])
         if data.get('base'):
-            card_ids.add(data['base']['id'].split('_')[1])
+            card_ids.add(data['base']['id'])
         if data.get('deck'):
             for card in data['deck']:
-                card_ids.add(card['id'].split('_')[1])
+                card_ids.add(card['id'])
         if data.get('sideboard'):
             for card in data['sideboard']:
-                card_ids.add(card['id'].split('_')[1])
+                card_ids.add(card['id'])
         
         print(f"Card IDs to process: {card_ids}")
 
         for card_id in card_ids:
             # Check if PNG file already exists in the folder
-            png_filename = os.path.join(image_folder, f"{card_id}.png")
+            png_filename = os.path.join(image_folder, f"{card_id.split('_')[0]}_{card_id.split('_')[1]}.png")
             if not os.path.exists(png_filename):
                 # Download regular image if it doesn't exist
-                regular_image_url = f"{base_url}{card_id}.png"
+                regular_image_url = f"{base_url}{card_id.split('_')[0]}/{card_id.split('_')[1]}.png"
                 if requests.head(regular_image_url).status_code == 200:
                     print(f"Downloading regular image for card ID {card_id} from URL: {regular_image_url}")
                     img_filename = os.path.join(image_folder, f"{card_id}.webp")
@@ -81,10 +82,10 @@ def fetch_images_from_website(json_file_path, image_folder):
                     convert_webp_to_png(img_filename)
 
             # Check if portrait PNG file already exists in the folder
-            portrait_png_filename = os.path.join(image_folder, f"{card_id}-portrait.png")
+            portrait_png_filename = os.path.join(image_folder, f"{card_id.split('_')[0]}_{card_id.split('_')[1]}-portrait.png")
             if not os.path.exists(portrait_png_filename):
                 # Download portrait image if it doesn't exist
-                portrait_image_url = f"{base_url}{card_id}-portrait.png"
+                portrait_image_url = f"{base_url}{card_id.split('_')[0]}/{card_id.split('_')[1]}-portrait.png"
                 if requests.head(portrait_image_url).status_code == 200:
                     print(f"Downloading portrait image for card ID {card_id} from URL: {portrait_image_url}")
                     portrait_img_filename = os.path.join(image_folder, f"{card_id}-portrait.webp")
@@ -136,17 +137,17 @@ def add_images_to_word(image_folder, output_file, json_file_path):
         # Function to add images to the images list based on count
         def add_images(card_list):
             for card in card_list:
-                card_id = card['id'].split('_')[1]
+                card_id = card['id']
                 count = card['count']
                 for _ in range(count):
                     images.append(f"{card_id}.png")  # Assuming the file names are {card_id}.png
 
         # Add leader and base images
         if data.get('leader'):
-            images.append(f"{data['leader']['id'].split('_')[1]}.png")
-            images.append(f"{data['leader']['id'].split('_')[1]}-portrait.png")
+            images.append(f"{data['leader']['id']}.png")
+            images.append(f"{data['leader']['id']}-portrait.png")
         if data.get('base'):
-            images.append(f"{data['base']['id'].split('_')[1]}.png")
+            images.append(f"{data['base']['id']}.png")
 
         # Add deck and sideboard images
         if data.get('deck'):
